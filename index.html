@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ca">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <title>Gestor de Factures</title>
+    </head>
+    <body>
+        <div class="container mt-5">
+            <h1 class="text-center mb-4">Sistema de Gestió de Factures</h1>
+            
+            <!-- Formulari de Factura -->
+            <div id="formulari-factura">
+                <div class="row mb-3">
+                    <div class="col-12 col-md-6">
+                        <label for="nomClient" class="form-label">Nom del Client:</label>
+                        <input type="text" id="nomClient" class="form-control" placeholder="Introdueix el nom del client">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="adreça" class="form-label">Adreça:</label>
+                        <input type="text" id="adreça" class="form-control" placeholder="Introdueix la adreça">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12 col-md-6">
+                        <label for="ciutat" class="form-label">Ciutat:</label>
+                        <input type="text" id="ciutat" class="form-control" placeholder="Introdueix la ciutat">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="invoiceNumber" class="form-label">Número de la Factura:</label>
+                        <input type="text" id="invoiceNumber" class="form-control" placeholder="Introdueix el número de la factura">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12 col-md-6">
+                        <label for="invoiceDate" class="form-label">Data de la Factura</label>
+                        <input type="date" id="invoiceDate" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Taula d'articles -->
+            <div class="table-responsive">
+                <table id="taula-factura" class="table table-striped">
+                    <thead class="text-center">
+                        <tr>
+                            <th>#</th>
+                            <th>Article</th>
+                            <th>Quantitat</th>
+                            <th>Preu</th>
+                            <th>Import</th>
+                            <th>Acció</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" class="article form-control" placeholder="Descripció de l'article"></td>
+                            <!-- Funcio calcularTotal del atriubt oninput és per a calcular el importTotal dels articles -->
+                            <td><input type="number" class="quantitat form-control" value="1" oninput="calcularTotal()" title="Quantitat"></td>
+                            <td><input type="number" class="preu form-control" value="0" oninput="calcularTotal()" title="Preu unitari"></td>
+                            <td><input type="number" class="import form-control" readonly title="Import"></td>
+                            <td><button class="btn btn-danger" onclick="eliminarFila(this)">Eliminar</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center mb-4">
+                <button id="afegirArticle" class="btn btn-primary">Afegir Article</button>
+            </div>
+
+            <!--Total-->
+            <div class="row">
+                <div class="col-12 col-md-4 mb-3">
+                    <label for="total" class="form-label">Total:</label>
+                    <input type="number" id="total" class="form-control" readonly value="0">
+                </div>
+
+                <div class="col-12 col-md-4 mb-3">
+                    <label for="descompte" class="form-label">Descompte (%):</label>
+                    <input type="number" id="descompte" class="form-control" value="0" oninput="calcularTotal()">
+                </div>
+
+                <div class="col-12 col-md-4 mb-3">
+                    <label for="imporTotal" class="form-label">Import Total:</label>
+                    <input type="number" id="imporTotal" class="form-control" readonly value="0">
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button id="guardarFactura" class="btn btn-success" onclick="guardarFactura()">Guardar Factura</button>
+            </div>
+
+            <h2 class="mt-5 text-center">Factures Guardades</h2>
+            <div class="table-responsive">
+                <table id="llistatFactures" class="table table-bordered">
+                    <thead class="text-center">
+                        <tr>
+                            <th>Nom del Client</th>
+                            <th>Número de la Factura</th>
+                            <th>Data de la Factura</th>
+                            <th>Import Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Les factures s'afegiran aquí dinàmicament -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Script de Bootstrap -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <script>
+            //Document representat tot el document, get busca el element el atribut del id afegirArticle, 
+            //i addEventListener és un metode que afegeix un escoltador de un event a un element, en el qual al fer click és afegira una fila
+            document.getElementById('afegirArticle').addEventListener('click', afegirFila);
+
+            function afegirFila(){
+                //Declaram la constant TAULA que no es podra cambia el valor, getElementsByTagName dins del element taula-factura selecciona el primer body 0
+                const TAULA = document.getElementById('taula-factura').getElementsByTagName('tbody')[0];
+                //insertRow és una funció per afegir una nova fila tr al final del tbody, el valor sera de NOVAFILA
+                const NOVAFILA = TAULA.insertRow();
+                //rows.length retorna el numero de files de taula-factura per a afegir cada fila nova incremental
+                const NUMFILES = TAULA.rows.length;
+
+                //Amb innerHTML definirim el contingut HTML, de la fila nova
+                NOVAFILA.innerHTML = `
+                <td>${NUMFILES}</td>
+                <td><input type="text" class="article form-control" placeholder="Descripció de l'article"></td>
+                <td><input type="number" class="quantitat form-control" value="1" oninput="calcularTotal()" title="Quantitat"></td>
+                <td><input type="number" class="preu form-control" value="0" oninput="calcularTotal()" title="Preu unitari"></td>
+                <td><input type="number" class="import form-control" readonly title="Import"></td>
+                <td><button class="btn btn-danger" onclick="eliminarFila(this)">Eliminar</button></td>
+            `;
+            }
+
+            function eliminarFila(button){
+                //parentNode permet accedir al elementPare d'un element, en aquest cas boto.parentNode ens porta al td que conte el boto
+                //I boto.parentNode.parentNode ens porta a la fila que conte aquest tr
+                const FILA = button.parentNode.parentNode;
+                //elimina la fila
+                FILA.remove();
+                //Recalcula el import Total despres de eliminar la fila
+                calcularTotal();
+            }
+
+            function calcularTotal(){
+                //declarem la variable total amb let en el qual nomes existeix dins de la funcio
+                let total = 0;
+                //amb var declares mes global
+                var files = document.querySelectorAll('#taula-factura tbody tr');
+
+                for (var i = 0; i < files.length; i++){
+                    //agafem la fila actual
+                    var fila = files[i];
+
+                    //Amb querySelector agafarem de la class quantitat el primer valor
+                    var quantitat = fila.querySelector('.quantitat').value;
+                    var preu = fila.querySelector('.preu').value
+
+                    var importarArticle = quantitat * preu;
+
+                    //Actualitzem el camp de l'import dins de la fila, i amb toFixed 2 es mostraran dos decimals
+                    fila.querySelector('.import').value = importarArticle.toFixed(2);
+
+                    total += importarArticle;
+                }
+
+                document.getElementById('total').value = total.toFixed(2);
+
+                var descomptePercent = document.getElementById('descompte').value;
+                var descompte = (total * descomptePercent) / 100;
+                var imporTotal = total - descompte;
+                //En aquest li assignem el imporTotal amb el descompte, si utilitzem appenChild seria per a agregar un valor al element
+                document.getElementById('imporTotal').value = imporTotal.toFixed(2);
+            }
+
+            function guardarFactura(){
+                //Obtenim els valors de les columnes
+                var nomClient = document.getElementById('nomClient').value;
+                var numeroFactura = document.getElementById('invoiceNumber').value;
+                var dataFactura = document.getElementById('invoiceDate').value;
+                var imporTotalFactura = document.getElementById('imporTotal').value;
+
+                //Comprovar que tots els camps estiguen plens abans de guardar la factura
+                if (nomClient && numeroFactura && dataFactura && imporTotalFactura){
+                    //getElementsByTagName selecciona tots els elements de tbody seleccionant el primer [0]
+                    var taulaFactures = document.getElementById('llistatFactures').getElementsByTagName('tbody')[0];
+                    //insertar les files a novaFila
+                    var novaFila = taulaFactures.insertRow();
+
+                    novaFila.innerHTML = `
+                    <td>${nomClient}</td>
+                    <td>${numeroFactura}</td>
+                    <td>${dataFactura}</td>
+                    <td>${imporTotalFactura}</td>
+                    `;
+                }
+                else {
+                    alert("Completa tots els camps abans de guardar la factura.");
+                }
+            }
+        </script>
+    </body>
+</html>
